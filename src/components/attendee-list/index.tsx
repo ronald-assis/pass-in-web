@@ -28,12 +28,31 @@ interface Attendee {
   checkedInAt: string | null
 }
 
+const initialStateSearch = () => {
+  const url = new URL(window.location.toString())
+
+  if (url.searchParams.has('search')) {
+    return url.searchParams.get('search') ?? ''
+  }
+
+  return ''
+}
+
+const initialStatePage = () => {
+  const url = new URL(window.location.toString())
+
+  if (url.searchParams.has('page')) {
+    return Number(url.searchParams.get('page'))
+  }
+
+  return 1
+}
+
 export function AttendeeList() {
-  const [search, setSearch] = useState('')
-  // const [page, setPage] = useState(1)
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [total, setTotal] = useState(0)
-  const page = 1
+  const [search, setSearch] = useState(initialStateSearch())
+  const [page, setPage] = useState(initialStatePage())
 
   const totalPages = Math.ceil(total / 10)
 
@@ -55,30 +74,41 @@ export function AttendeeList() {
       })
   }, [page, search])
 
+  const setCurrentSearch = (search: string) => {
+    const url = new URL(window.location.toString())
+
+    url.searchParams.set('search', search)
+    window.history.pushState({}, '', url)
+    setSearch(search)
+  }
+
+  const setCurrentPage = (page: number) => {
+    const url = new URL(window.location.toString())
+
+    url.searchParams.set('page', String(page))
+    window.history.pushState({}, '', url)
+    setPage(page)
+  }
+
   const onSearchInputChanged = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value)
-    // setPage(1)
+    setCurrentSearch(event.target.value)
+    setCurrentPage(1)
   }
 
   const goToNextPage = () => {
-    // setPage(page + 1)
-
-    const searchParams = new URLSearchParams(window.location.search)
-
-    searchParams.set('page', String(page + 1))
-    window.location.search = searchParams.toString()
+    setCurrentPage(page + 1)
   }
 
   const goToPreviousPage = () => {
-    // setPage(page - 1)
+    setCurrentPage(page - 1)
   }
 
   const goToFirstPage = () => {
-    // setPage(1)
+    setCurrentPage(1)
   }
 
   const goToLastPage = () => {
-    // setPage(totalPages)
+    setCurrentPage(totalPages)
   }
 
   return (
@@ -92,6 +122,7 @@ export function AttendeeList() {
             type="text"
             placeholder="Buscar participante..."
             onChange={onSearchInputChanged}
+            value={search}
           />
         </div>
       </article>
